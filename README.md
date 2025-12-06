@@ -13,13 +13,16 @@ As transactions accumulate, the system automatically constructs a digital financ
 
 
 **2. MIS RELEVANCE**
+
 This system functions as a complete agricultural MIS because it captures, processes, analyzes, and distributes essential agricultural information required for decision-making. It supports operational management by automating order processing, delivery scheduling, and spoilage alerts. It also supports tactical and strategic management through price forecasting, crop demand prediction, and credit scoring intelligence.
 
 Market intelligence elements allow stakeholders to see price fluctuations, seasonal patterns, and buyer demand in real time. Supply chain management functions ensure harvest movement from farm to market is tracked and optimized. Financial MIS components create reliable digital profiles that help farmers interact with banks and credit institutions. Overall, the system provides continuous information support for agricultural planning, risk minimization, and economic decision-making.
 
 
 **3. OBJECTIVES**
+
 *A. System Objectives*
+
 * To automate the full agricultural supply chain from harvest registration to market delivery.
 
 * To provide accurate real-time price intelligence and seasonal market forecasting.
@@ -29,6 +32,7 @@ Market intelligence elements allow stakeholders to see price fluctuations, seaso
 * To monitor spoilage risk and prevent financial loss through proactive alerts and storage reallocation
 
 *B. Management Objectives*
+
 * To support national food security by reducing post-harvest losses.
 
 * To increase transparency in agricultural transactions through digital tracking.
@@ -36,6 +40,7 @@ Market intelligence elements allow stakeholders to see price fluctuations, seaso
 * To enable credit access for farmers through formalized financial history.
 
 *C. Technical Objective*
+
 * To implement advanced PL/SQL logic capable of high data throughput and predictive accuracy.
 
 * To integrate automated triggers, schedulers, and analytics functions for real-time intelligence.
@@ -44,6 +49,7 @@ Market intelligence elements allow stakeholders to see price fluctuations, seaso
 
 
 **EXPECTED OUTCOMES**
+
 The system is expected to significantly reduce harvest waste through early spoilage detection and optimized storage utilization. By granting farmers direct access to buyer information and market pricing, it increases their revenue margins while cutting out intermediaries who traditionally exploit pricing gaps.
 
 Digital transaction histories build strong financial credibility, allowing farmers to qualify for loans and formal banking services within a year of consistent sales activity. Market transparency improves at national scale, allowing stakeholders to see harvest trends, demand surges, and weather-based risks in advance.
