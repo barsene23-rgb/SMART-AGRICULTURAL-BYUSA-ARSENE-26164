@@ -1,6 +1,8 @@
 # SMART AGRICULTURAL SUPPLY CHAIN & MARKET INTELLIGENCE SYSTEM
 ## Scope Definition
+
 **1. BUSINESS PROCESS OUTLINE**
+
 The system begins by registering farmers and validating their location, crop types, and expected harvest periods. Once registered, farmers record harvest events, including quantity, quality grade, and storage details. At the same time, market data such as daily price movements, demand levels, and seasonal fluctuations are continuously integrated into the database.
 
 Using this information, the system performs intelligent matching between farmers and buyers. Buyers post their crop needs, and the system evaluates proximity, price expectations, quality requirements, and reliability scores to recommend the best pairing. Upon successful matching, an order is generated, delivery logistics are assigned, storage capacity is checked, and digital documentation such as invoices and payment confirmations is produced.
