@@ -25,3 +25,25 @@ Market intelligence elements allow stakeholders to see price fluctuations, seaso
 * To enable smart matching between farmers and buyers to eliminate unnecessary middlemen.
 
 * To monitor spoilage risk and prevent financial loss through proactive alerts and storage reallocation
+
+*B. Management Objectives*
+* To support national food security by reducing post-harvest losses.
+
+* To increase transparency in agricultural transactions through digital tracking.
+
+* To enable credit access for farmers through formalized financial history.
+
+*C. Technical Objective*
+* To implement advanced PL/SQL logic capable of high data throughput and predictive accuracy.
+
+* To integrate automated triggers, schedulers, and analytics functions for real-time intelligence.
+
+* To maintain sub-second responsiveness for price lookup, matching, and spoilage detection.
+
+
+**EXPECTED OUTCOMES**
+The system is expected to significantly reduce harvest waste through early spoilage detection and optimized storage utilization. By granting farmers direct access to buyer information and market pricing, it increases their revenue margins while cutting out intermediaries who traditionally exploit pricing gaps.
+
+Digital transaction histories build strong financial credibility, allowing farmers to qualify for loans and formal banking services within a year of consistent sales activity. Market transparency improves at national scale, allowing stakeholders to see harvest trends, demand surges, and weather-based risks in advance.
+
+Finally, by integrating predictive analytics, the system evolves into a long-term agricultural intelligence platform capable of supporting planning, export coordination, and national agricultural policy development.
