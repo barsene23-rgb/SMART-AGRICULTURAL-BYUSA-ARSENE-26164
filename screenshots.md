@@ -56,7 +56,33 @@ Captures weather data by district including temperature, rainfall, humidity, and
 <img width="943" height="272" alt="weather info" src="https://github.com/user-attachments/assets/52696afe-68df-4b86-bd8e-1f48be694304" />
 
 
-## ER Diagaram
+ **ER Diagaram**
 This Entity-Relationship Diagram shows how the Agricultural Management System connects farmers, crops, storage, and buyers. The diagram illustrates the flow from farm to market: FARMERS produce HARVESTS of CROPS, stored in STORAGE_FACILITIES, and sold via TRANSACTIONS to BUYERS. MARKET_PRICES tracks crop pricing trends, while WEATHER_INFO supports planning decisions. Lines between entities show relationships, with primary keys (PK) identifying records and foreign keys (FK) linking related tables.
 
 <img width="461" height="229" alt="er diagram" src="https://github.com/user-attachments/assets/7fdcd2e1-c127-4093-93bc-52bb200dc656" />
+
+
+## test results
+
+*testing price analytics package*
+
+<img width="950" height="458" alt="price analytics" src="https://github.com/user-attachments/assets/1b50d4ec-3159-4dc1-b5c3-3d332fbcb0fc" />
+
+*testing credit_scores packages*
+
+<img width="959" height="494" alt="creditscore" src="https://github.com/user-attachments/assets/3da6ed9b-4423-4ce8-ad18-20a84fd64753" />
+
+
+*testing matching engines packages*
+
+<img width="959" height="506" alt="matching engines" src="https://github.com/user-attachments/assets/bac5f31e-ed51-485b-a965-a962836cbe4e" />
+
+
+*testing spoilage monitor package* 
+
+<img width="959" height="458" alt="spoilage" src="https://github.com/user-attachments/assets/179af411-13f6-49fb-9b2f-776a63393653" />
+
+
+*testing report generator package*
+
+<img width="959" height="446" alt="report generator" src="https://github.com/user-attachments/assets/704d7c6c-1f21-42ce-ae67-adf565f285bf" />
