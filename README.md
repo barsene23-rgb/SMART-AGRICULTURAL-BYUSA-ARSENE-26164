@@ -58,3 +58,7 @@ Start DBMS_SCHEDULER jobs for spoilage alerts and price tracking, triggering not
 ***Generate Reports***
 
 Use REPORT_GENERATOR to view price trends, storage usage, spoilage predictions, and credit scoring summaries.
+
+
+### Links to Documentation
+
