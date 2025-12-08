@@ -732,3 +732,595 @@ BEGIN
 
 END;
 /
+
+
+
+**matching_engine**
+
+
+
+CREATE OR REPLACE PACKAGE matching_engine IS
+
+  TYPE match_result_rec IS RECORD (
+    farmer_id    NUMBER,
+    buyer_id     NUMBER,
+    match_score  NUMBER,
+    distance_km  NUMBER,
+    price_diff   NUMBER
+  );
+
+  TYPE match_result_table IS TABLE OF match_result_rec;
+
+  TYPE match_array IS TABLE OF match_result_rec INDEX BY PLS_INTEGER;
+
+  -- Function to calculate geographic distance (mocked by district centroids)
+  FUNCTION calc_distance(p_farmer_district VARCHAR2, p_buyer_location VARCHAR2) RETURN NUMBER;
+
+  PROCEDURE bulk_process_matches;
+
+  FUNCTION pipelined_matches(p_buyer_id NUMBER) RETURN match_result_table PIPELINED;
+
+END matching_engine;
+/
+
+CREATE OR REPLACE PACKAGE BODY matching_engine IS
+
+  -- Mock district centroid coordinates (latitude, longitude)
+  -- In a real system, replace with actual geocoding or a reference table
+  TYPE district_coord IS RECORD (lat NUMBER, lon NUMBER);
+  TYPE district_coord_map IS TABLE OF district_coord INDEX BY VARCHAR2(50);
+
+  g_district_coords district_coord_map;
+
+  PROCEDURE init_district_coords IS
+  BEGIN
+    g_district_coords('Kicukiro') := district_coord(1, 1);
+    g_district_coords('Gasabo') := district_coord(2, 2);
+    g_district_coords('Rwamagana') := district_coord(3, 3);
+    g_district_coords('Kirehe') := district_coord(4, 4);
+    g_district_coords('Nyamagabe') := district_coord(5, 5);
+    -- Add more districts as needed
+  END;
+
+  FUNCTION calc_distance(p_farmer_district VARCHAR2, p_buyer_location VARCHAR2) RETURN NUMBER IS
+    pi NUMBER := ACOS(-1);
+    lat1 NUMBER;
+    lon1 NUMBER;
+    lat2 NUMBER;
+    lon2 NUMBER;
+    rad_lat1 NUMBER;
+    rad_lon1 NUMBER;
+    rad_lat2 NUMBER;
+    rad_lon2 NUMBER;
+    delta_lat NUMBER;
+    delta_lon NUMBER;
+    a NUMBER;
+    c NUMBER;
+    radius_km CONSTANT NUMBER := 6371;
+    dist NUMBER;
+  BEGIN
+    IF g_district_coords.EXISTS(p_farmer_district) THEN
+      lat1 := g_district_coords(p_farmer_district).lat;
+      lon1 := g_district_coords(p_farmer_district).lon;
+    ELSE
+      lat1 := 0; lon1 := 0; -- Default/fallback
+    END IF;
+
+    IF g_district_coords.EXISTS(p_buyer_location) THEN
+      lat2 := g_district_coords(p_buyer_location).lat;
+      lon2 := g_district_coords(p_buyer_location).lon;
+    ELSE
+      lat2 := 0; lon2 := 0;
+    END IF;
+
+    rad_lat1 := lat1 * (pi / 180);
+    rad_lon1 := lon1 * (pi / 180);
+    rad_lat2 := lat2 * (pi / 180);
+    rad_lon2 := lon2 * (pi / 180);
+
+    delta_lat := rad_lat2 - rad_lat1;
+    delta_lon := rad_lon2 - rad_lon1;
+
+    a := SIN(delta_lat/2)*SIN(delta_lat/2) + COS(rad_lat1)*COS(rad_lat2)*SIN(delta_lon/2)*SIN(delta_lon/2);
+    c := 2 * ATAN2(SQRT(a), SQRT(1 - a));
+    dist := radius_km * c;
+
+    RETURN dist;
+  END calc_distance;
+
+  PROCEDURE bulk_process_matches IS
+
+    CURSOR buyers_cur IS
+      SELECT buyer_id, preferred_crops, location, payment_reliability_score
+      FROM buyers;
+
+    CURSOR farmers_cur(p_crop VARCHAR2) IS
+      SELECT farmer_id, primary_crops, credit_score, district
+      FROM farmers
+      WHERE INSTR(primary_crops, p_crop) > 0;
+
+    TYPE match_array IS TABLE OF match_result_rec INDEX BY PLS_INTEGER;
+    v_matches match_array;
+    v_count PLS_INTEGER := 0;
+
+    v_buyer_id NUMBER;
+    v_buyer_crops VARCHAR2(4000);
+    v_buyer_location VARCHAR2(100);
+    v_buyer_payment_score NUMBER;
+
+  BEGIN
+    init_district_coords;
+
+    FOR buyer_rec IN buyers_cur LOOP
+      v_buyer_id := buyer_rec.buyer_id;
+      v_buyer_crops := buyer_rec.preferred_crops;
+      v_buyer_location := buyer_rec.location;
+      v_buyer_payment_score := buyer_rec.payment_reliability_score;
+
+      FOR crop_rec IN (
+        SELECT REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) AS crop_name
+        FROM dual
+        CONNECT BY REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) IS NOT NULL
+      ) LOOP
+        FOR farmer_rec IN farmers_cur(TRIM(crop_rec.crop_name)) LOOP
+
+          DECLARE
+            v_distance NUMBER;
+            v_price_diff NUMBER := 0;
+            v_match_score NUMBER;
+            v_historical_success NUMBER := 0;
+            v_avg_price_harvest NUMBER := 0;
+            v_avg_price_market NUMBER := 0;
+          BEGIN
+            -- Calculate distance by districts (mock)
+            v_distance := calc_distance(farmer_rec.district, v_buyer_location);
+
+            -- Average price from harvests for this crop and farmer
+            SELECT NVL(AVG(C.current_market_price), 0)
+              INTO v_avg_price_market
+              FROM crops C
+              WHERE C.crop_name = TRIM(crop_rec.crop_name);
+
+            -- For farmer harvest prices, join harvest and transactions
+            SELECT NVL(AVG(T.agreed_price), 0)
+              INTO v_avg_price_harvest
+              FROM harvests H
+              JOIN transactions T ON H.harvest_id = T.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_price_diff := ABS(v_avg_price_harvest - v_avg_price_market);
+
+            -- Historical success rate: % of transactions with quality_rating >= 4 for this farmer and buyers
+            SELECT NVL(COUNT(CASE WHEN T.quality_rating >= 4 THEN 1 END)/NULLIF(COUNT(*),0), 0)
+              INTO v_historical_success
+              FROM transactions T
+              JOIN harvests H ON T.harvest_id = H.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND T.buyer_id = v_buyer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            -- Match score components:
+            -- Credit score scaled (max 1000), closer distance better, price diff smaller better, historical success high better
+            v_match_score :=
+              (1000 - LEAST(farmer_rec.credit_score,1000)) * 0.1 + -- inverse credit score penalty
+              (100 - LEAST(v_distance, 100)) * 0.3 +
+              (100 - LEAST(v_price_diff * 10, 100)) * 0.3 +
+              (v_historical_success * 100) * 0.3;
+
+            v_count := v_count + 1;
+            v_matches(v_count) := match_result_rec(
+              farmer_id   => farmer_rec.farmer_id,
+              buyer_id    => v_buyer_id,
+              match_score => ROUND(v_match_score, 2),
+              distance_km => ROUND(v_distance, 2),
+              price_diff  => ROUND(v_price_diff, 2)
+            );
+          END;
+        END LOOP;
+      END LOOP;
+    END LOOP;
+
+    -- Bulk insert example (if needed, commented)
+    /*
+    FORALL i IN 1 .. v_count
+      INSERT INTO match_results_temp(farmer_id, buyer_id, match_score, distance_km, price_diff)
+      VALUES (v_matches(i).farmer_id, v_matches(i).buyer_id, v_matches(i).match_score, v_matches(i).distance_km, v_matches(i).price_diff);
+    */
+  END bulk_process_matches;
+
+  FUNCTION pipelined_matches(p_buyer_id NUMBER) RETURN match_result_table PIPELINED IS
+
+    CURSOR buyer_cur IS
+      SELECT buyer_id, preferred_crops, location, payment_reliability_score
+      FROM buyers
+      WHERE buyer_id = p_buyer_id;
+
+    CURSOR farmers_cur(p_crop VARCHAR2) IS
+      SELECT farmer_id, primary_crops, credit_score, district
+      FROM farmers
+      WHERE INSTR(primary_crops, p_crop) > 0;
+
+    v_buyer_id NUMBER;
+    v_buyer_crops VARCHAR2(4000);
+    v_buyer_location VARCHAR2(100);
+    v_buyer_payment_score NUMBER;
+
+  BEGIN
+    init_district_coords;
+
+    FOR buyer_rec IN buyer_cur LOOP
+      v_buyer_id := buyer_rec.buyer_id;
+      v_buyer_crops := buyer_rec.preferred_crops;
+      v_buyer_location := buyer_rec.location;
+      v_buyer_payment_score := buyer_rec.payment_reliability_score;
+
+      FOR crop_rec IN (
+        SELECT REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) AS crop_name
+        FROM dual
+        CONNECT BY REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) IS NOT NULL
+      ) LOOP
+        FOR farmer_rec IN farmers_cur(TRIM(crop_rec.crop_name)) LOOP
+
+          DECLARE
+            v_distance NUMBER;
+            v_price_diff NUMBER := 0;
+            v_match_score NUMBER;
+            v_historical_success NUMBER := 0;
+            v_avg_price_harvest NUMBER := 0;
+            v_avg_price_market NUMBER := 0;
+          BEGIN
+            v_distance := calc_distance(farmer_rec.district, v_buyer_location);
+
+            SELECT NVL(AVG(C.current_market_price), 0)
+              INTO v_avg_price_market
+              FROM crops C
+              WHERE C.crop_name = TRIM(crop_rec.crop_name);
+
+            SELECT NVL(AVG(T.agreed_price), 0)
+              INTO v_avg_price_harvest
+              FROM harvests H
+              JOIN transactions T ON H.harvest_id = T.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_price_diff := ABS(v_avg_price_harvest - v_avg_price_market);
+
+            SELECT NVL(COUNT(CASE WHEN T.quality_rating >= 4 THEN 1 END)/NULLIF(COUNT(*),0), 0)
+              INTO v_historical_success
+              FROM transactions T
+              JOIN harvests H ON T.harvest_id = H.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND T.buyer_id = v_buyer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_match_score :=
+              (1000 - LEAST(farmer_rec.credit_score,1000)) * 0.1 +
+              (100 - LEAST(v_distance, 100)) * 0.3 +
+              (100 - LEAST(v_price_diff * 10, 100)) * 0.3 +
+              (v_historical_success * 100) * 0.3;
+
+            PIPE ROW(match_result_rec(
+              farmer_id   => farmer_rec.farmer_id,
+              buyer_id    => v_buyer_id,
+              match_score => ROUND(v_match_score, 2),
+              distance_km => ROUND(v_distance, 2),
+              price_diff  => ROUND(v_price_diff, 2)
+            ));
+          END;
+        END LOOP;
+      END LOOP;
+    END LOOP;
+
+    RETURN;
+  END pipelined_matches;
+
+END matching_engine;
+/
+
+
+SET SERVEROUTPUT ON
+
+DECLARE
+  TYPE match_table_type IS TABLE OF matching_engine.match_result_rec;
+  matches match_table_type;
+BEGIN
+  -- Test pipelined_matches function for buyer_id = 1
+  SELECT * BULK COLLECT INTO matches
+  FROM TABLE(matching_engine.pipelined_matches(1));
+
+  IF matches.COUNT = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('No matches found for buyer_id 1.');
+  ELSE
+    FOR i IN 1 .. matches.COUNT LOOP
+      DBMS_OUTPUT.PUT_LINE('Farmer ID: ' || matches(i).farmer_id ||
+                           ', Buyer ID: ' || matches(i).buyer_id ||
+                           ', Score: ' || matches(i).match_score ||
+                           ', Distance (km): ' || matches(i).distance_km ||
+                           ', Price Diff: ' || matches(i).price_diff);
+    END LOOP;
+  END IF;
+END;
+/
+
+
+
+
+
+**Report Generator**
+
+
+
+
+
+CREATE OR REPLACE PACKAGE report_generator IS
+
+  TYPE ref_cursor IS REF CURSOR;
+
+  PROCEDURE generate_price_forecast(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+  PROCEDURE generate_demand_prediction(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+  PROCEDURE generate_complex_report(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+END report_generator;
+/
+
+CREATE OR REPLACE PACKAGE BODY report_generator IS
+
+  -- 1. Price Forecast
+  PROCEDURE generate_price_forecast(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+  BEGIN
+    OPEN p_result FOR
+      WITH price_data AS (
+        SELECT
+          mp.date_recorded,
+          mp.price_per_kg,
+          AVG(mp.price_per_kg) OVER (ORDER BY mp.date_recorded ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS moving_avg_30d
+        FROM
+          market_prices mp
+          JOIN crops c ON mp.crop_id = c.crop_id
+        WHERE
+          c.crop_name = p_crop_name
+          AND mp.date_recorded BETWEEN p_start_date AND p_end_date
+      ),
+      forecast AS (
+        SELECT
+          date_recorded,
+          moving_avg_30d,
+          LEAD(moving_avg_30d) OVER (ORDER BY date_recorded) AS next_day_forecast
+        FROM
+          price_data
+      )
+      SELECT
+        date_recorded,
+        moving_avg_30d,
+        next_day_forecast
+      FROM
+        forecast
+      ORDER BY
+        date_recorded;
+  END generate_price_forecast;
+
+  -- 2. Demand Prediction
+  PROCEDURE generate_demand_prediction(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+  BEGIN
+    OPEN p_result FOR
+      WITH demand_weather AS (
+        SELECT
+          t.transaction_date,
+          c.crop_name,
+          SUM(t.quantity_kg) AS total_quantity,
+          wi.temperature,
+          wi.rainfall_mm
+        FROM
+          transactions t
+          JOIN harvests h ON t.harvest_id = h.harvest_id
+          JOIN crops c ON h.crop_id = c.crop_id
+          JOIN weather_info wi ON wi.district = (
+            SELECT district FROM farmers f WHERE f.farmer_id = h.farmer_id
+          ) AND wi.weather_date = TRUNC(t.transaction_date)
+        WHERE
+          c.crop_name = p_crop_name
+          AND t.transaction_date BETWEEN p_start_date AND p_end_date
+        GROUP BY
+          t.transaction_date, c.crop_name, wi.temperature, wi.rainfall_mm
+      )
+      SELECT
+        transaction_date,
+        crop_name,
+        total_quantity,
+        temperature,
+        rainfall_mm,
+        CASE
+          WHEN temperature > 30 AND rainfall_mm < 20 THEN total_quantity * 0.9
+          WHEN temperature < 15 AND rainfall_mm > 50 THEN total_quantity * 1.1
+          ELSE total_quantity
+        END AS adjusted_demand_prediction
+      FROM
+        demand_weather
+      ORDER BY
+        transaction_date;
+  END generate_demand_prediction;
+
+  -- 3. Complex Report
+  PROCEDURE generate_complex_report(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+    v_sql VARCHAR2(4000);
+  BEGIN
+    v_sql := q'[
+      WITH sales_cte AS (
+        SELECT
+          t.transaction_date,
+          c.crop_name,
+          SUM(t.quantity_kg) AS total_quantity,
+          AVG(t.agreed_price) AS avg_price,
+          RANK() OVER (PARTITION BY c.crop_name ORDER BY SUM(t.quantity_kg) DESC) AS sales_rank
+        FROM
+          transactions t
+          JOIN harvests h ON t.harvest_id = h.harvest_id
+          JOIN crops c ON h.crop_id = c.crop_id
+        WHERE
+          c.crop_name = :crop_name
+          AND t.transaction_date BETWEEN :start_date AND :end_date
+        GROUP BY
+          t.transaction_date, c.crop_name
+      ),
+      price_trends AS (
+        SELECT
+          transaction_date,
+          avg_price,
+          LAG(avg_price) OVER (ORDER BY transaction_date) AS prev_avg_price,
+          AVG(avg_price) OVER (ORDER BY transaction_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS moving_avg_7d
+        FROM sales_cte
+      )
+      SELECT
+        s.transaction_date,
+        s.total_quantity,
+        s.avg_price,
+        p.prev_avg_price,
+        p.moving_avg_7d,
+        s.sales_rank
+      FROM
+        sales_cte s
+        JOIN price_trends p ON s.transaction_date = p.transaction_date
+      ORDER BY
+        s.transaction_date
+    ]';
+
+    OPEN p_result FOR v_sql USING p_crop_name, p_start_date, p_end_date;
+  END generate_complex_report;
+
+END report_generator;
+/
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+  rc SYS_REFCURSOR;
+
+  -- For generate_price_forecast
+  v_date_recorded DATE;
+  v_moving_avg_30d NUMBER;
+  v_next_day_forecast NUMBER;
+
+  -- For generate_demand_prediction
+  v_transaction_date DATE;
+  v_crop_name VARCHAR2(100);
+  v_total_quantity NUMBER;
+  v_temperature NUMBER;
+  v_rainfall_mm NUMBER;
+  v_adjusted_demand_prediction NUMBER;
+
+  -- For generate_complex_report
+  v_report_date DATE;
+  v_total_quantity_report NUMBER;
+  v_avg_price NUMBER;
+  v_prev_avg_price NUMBER;
+  v_moving_avg_7d NUMBER;
+  v_sales_rank NUMBER;
+
+BEGIN
+  -- Test generate_price_forecast
+  DBMS_OUTPUT.PUT_LINE('--- Price Forecast ---');
+  report_generator.generate_price_forecast(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_date_recorded, v_moving_avg_30d, v_next_day_forecast;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_date_recorded, 'YYYY-MM-DD') ||
+      ', 30d Moving Avg: ' || NVL(TO_CHAR(v_moving_avg_30d, '999999.99'), 'NULL') ||
+      ', Next Day Forecast: ' || NVL(TO_CHAR(v_next_day_forecast, '999999.99'), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+  -- Test generate_demand_prediction
+  DBMS_OUTPUT.PUT_LINE('--- Demand Prediction ---');
+  report_generator.generate_demand_prediction(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_transaction_date, v_crop_name, v_total_quantity, v_temperature, v_rainfall_mm, v_adjusted_demand_prediction;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_transaction_date, 'YYYY-MM-DD') ||
+      ', Crop: ' || v_crop_name ||
+      ', Total Qty: ' || NVL(TO_CHAR(v_total_quantity), 'NULL') ||
+      ', Temp: ' || NVL(TO_CHAR(v_temperature), 'NULL') ||
+      ', Rainfall: ' || NVL(TO_CHAR(v_rainfall_mm), 'NULL') ||
+      ', Adjusted Demand: ' || NVL(TO_CHAR(v_adjusted_demand_prediction, '999999.99'), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+  -- Test generate_complex_report
+  DBMS_OUTPUT.PUT_LINE('--- Complex Report ---');
+  report_generator.generate_complex_report(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_report_date, v_total_quantity_report, v_avg_price, v_prev_avg_price, v_moving_avg_7d, v_sales_rank;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_report_date, 'YYYY-MM-DD') ||
+      ', Total Qty: ' || NVL(TO_CHAR(v_total_quantity_report), 'NULL') ||
+      ', Avg Price: ' || NVL(TO_CHAR(v_avg_price, '999999.99'), 'NULL') ||
+      ', Prev Avg Price: ' || NVL(TO_CHAR(v_prev_avg_price, '999999.99'), 'NULL') ||
+      ', 7d Moving Avg: ' || NVL(TO_CHAR(v_moving_avg_7d, '999999.99'), 'NULL') ||
+      ', Sales Rank: ' || NVL(TO_CHAR(v_sales_rank), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+END;
+/
+
+commit;
