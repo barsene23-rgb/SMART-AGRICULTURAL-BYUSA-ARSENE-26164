@@ -65,6 +65,7 @@ Captures weather data by district including temperature, rainfall, humidity, and
 
 
  **ER Diagaram**
+
 This Entity-Relationship Diagram shows how the Agricultural Management System connects farmers, crops, storage, and buyers. The diagram illustrates the flow from farm to market: FARMERS produce HARVESTS of CROPS, stored in STORAGE_FACILITIES, and sold via TRANSACTIONS to BUYERS. MARKET_PRICES tracks crop pricing trends, while WEATHER_INFO supports planning decisions. Lines between entities show relationships, with primary keys (PK) identifying records and foreign keys (FK) linking related tables.
 
 <img width="461" height="229" alt="er diagram" src="https://github.com/user-attachments/assets/7fdcd2e1-c127-4093-93bc-52bb200dc656" />
