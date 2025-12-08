@@ -5,4 +5,5 @@ This is an Agricultural Management System that connects farmers with markets, tr
 Stores farmer profiles including identification, contact details, location (district/sector/cell/village), farm size, crop preferences, and creditworthiness for financial assessment.
 
 
-![screenshots](farmers.png)
+<img width="959" height="480" alt="farmers" src="https://github.com/user-attachments/assets/b01d901f-d111-4f49-9bda-8d45d662ff1b" />
+
