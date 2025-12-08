@@ -1,0 +1,25 @@
+## BPMN Diagram: Smart Agricultural Supply Chain & Market Intelligence
+
+flowchart LR
+    A[Farmer Registers] --> B[Add Harvest]
+    B --> C[Assign Storage Facility]
+    C --> D[Monitor Storage Conditions]
+    D --> E[Record Market Prices]
+    E --> F[Buyer Interested]
+    F --> G[Transaction Negotiation]
+    G --> H[Finalize Sale]
+    H --> I[Delivery]
+    I --> J[Payment]
+    J --> K[Feedback & Ratings]
+    K --> L[Update Credit Score]
+
+
+### Process Description
+
+* **Farmer Registration:** Farmer data stored in FARMERS table.
+* **Harvest Entry:** Harvest record created under HARVESTS.
+* **Storage Management:** HARVESTS references STORAGE_FACILITIES.
+* **Market Price Tracking:** MARKET_PRICES continuously updated.
+* **Buyer Matching:** BUYERS & TRANSACTIONS define deals.
+* **Transaction Lifecycle:** Negotiation → Delivery → Payment → Ratings.
+* **Credit Score Update:** Based on ratings, payment behavior.
