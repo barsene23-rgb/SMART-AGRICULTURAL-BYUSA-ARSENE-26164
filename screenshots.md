@@ -5,4 +5,4 @@ This is an Agricultural Management System that connects farmers with markets, tr
 Stores farmer profiles including identification, contact details, location (district/sector/cell/village), farm size, crop preferences, and creditworthiness for financial assessment.
 
 
-![farm](file:///C:/Users/mukan/OneDrive/Pictures/Screenshots/farmers.png)
+![screenshot](file:///C:/Users/mukan/OneDrive/Pictures/Screenshots/farmers.png)
