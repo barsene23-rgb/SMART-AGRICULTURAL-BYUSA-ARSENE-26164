@@ -1,6 +1,12 @@
 ## Database Structure
 This is an Agricultural Management System that connects farmers with markets, tracks harvest production, manages storage facilities, monitors market prices, and records transactions. The system helps optimize the agricultural supply chain from farm to buyer while incorporating weather data for better planning.
 
+
+*Pluggable database created*
+<img width="959" height="492" alt="Screenshot 2025-12-08 204141" src="https://github.com/user-attachments/assets/8cf1a309-d785-4679-adb5-52696893bc7f" />
+
+
+
  *FARMERS*
 
 Stores farmer profiles including identification, contact details, location (district/sector/cell/village), farm size, crop preferences, and creditworthiness for financial assessment.
