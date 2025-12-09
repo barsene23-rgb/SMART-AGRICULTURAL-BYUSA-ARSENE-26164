@@ -1,0 +1,1639 @@
+CREATE TABLE FARMERS (
+    farmer_id NUMBER PRIMARY KEY,
+    national_id VARCHAR2(50) UNIQUE NOT NULL,
+    names VARCHAR2(100) NOT NULL,
+    phone VARCHAR2(20),
+    district VARCHAR2(50),
+    sector VARCHAR2(50),
+    cell VARCHAR2(50),
+    village VARCHAR2(50),
+    farm_size_hectares NUMBER,
+    primary_crops VARCHAR2(100),
+    registration_date DATE,
+    credit_score NUMBER
+);
+
+CREATE TABLE CROPS (
+    crop_id NUMBER PRIMARY KEY,
+    crop_name VARCHAR2(100) UNIQUE NOT NULL,
+    category VARCHAR2(50),
+    avg_shelf_life_days NUMBER,
+    optimal_storage_temp NUMBER,
+    seasonal_pattern VARCHAR2(100),
+    min_price NUMBER,
+    max_price NUMBER,
+    current_market_price NUMBER
+);
+
+CREATE TABLE STORAGE_FACILITIES (
+    storage_id NUMBER PRIMARY KEY,
+    location VARCHAR2(100),
+    capacity_kg NUMBER,
+    current_occupancy NUMBER,
+    temperature NUMBER,
+    humidity_level NUMBER,
+    facility_type VARCHAR2(50),
+    cost_per_day NUMBER
+);
+
+CREATE TABLE HARVESTS (
+    harvest_id NUMBER PRIMARY KEY,
+    farmer_id NUMBER NOT NULL,
+    crop_id NUMBER NOT NULL,
+    quantity_kg NUMBER,
+    quality_grade VARCHAR2(20),
+    harvest_date DATE,
+    expected_spoilage_date DATE,
+    storage_location VARCHAR2(100),
+    storage_id NUMBER,
+    status VARCHAR2(30),
+    CONSTRAINT fk_harvests_farmers FOREIGN KEY (farmer_id) REFERENCES FARMERS(farmer_id),
+    CONSTRAINT fk_harvests_crops FOREIGN KEY (crop_id) REFERENCES CROPS(crop_id),
+    CONSTRAINT fk_harvests_storage FOREIGN KEY (storage_id) REFERENCES STORAGE_FACILITIES(storage_id)
+);
+
+CREATE TABLE MARKET_PRICES (
+    price_id NUMBER PRIMARY KEY,
+    crop_id NUMBER NOT NULL,
+    market_location VARCHAR2(100),
+    price_per_kg NUMBER,
+    date_recorded DATE,
+    demand_level VARCHAR2(30),
+    supply_level VARCHAR2(30),
+    price_trend VARCHAR2(30),
+    CONSTRAINT fk_marketprices_crops FOREIGN KEY (crop_id) REFERENCES CROPS(crop_id)
+);
+
+CREATE TABLE BUYERS (
+    buyer_id NUMBER PRIMARY KEY,
+    buyer_name VARCHAR2(100),
+    buyer_type VARCHAR2(50),
+    phone VARCHAR2(20),
+    location VARCHAR2(100),
+    preferred_crops VARCHAR2(100),
+    payment_reliability_score NUMBER
+);
+
+CREATE TABLE TRANSACTIONS (
+    transaction_id NUMBER PRIMARY KEY,
+    harvest_id NUMBER NOT NULL,
+    buyer_id NUMBER NOT NULL,
+    quantity_kg NUMBER,
+    agreed_price NUMBER,
+    transaction_date DATE,
+    payment_status VARCHAR2(30),
+    delivery_status VARCHAR2(30),
+    quality_rating NUMBER,
+    farmer_rating NUMBER,
+    buyer_rating NUMBER,
+    CONSTRAINT fk_transactions_harvests FOREIGN KEY (harvest_id) REFERENCES HARVESTS(harvest_id),
+    CONSTRAINT fk_transactions_buyers FOREIGN KEY (buyer_id) REFERENCES BUYERS(buyer_id)
+);
+
+CREATE TABLE WEATHER_Info (
+    weather_id NUMBER PRIMARY KEY,
+    district VARCHAR2(50),
+    weather_date DATE,
+    temperature NUMBER,
+    rainfall_mm NUMBER,
+    humidity NUMBER,
+    forecast_next_7days VARCHAR2(255)
+);
+commit;
+
+
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO FARMERS (farmer_id, national_id, names, phone, district, sector, cell, village, farm_size_hectares, primary_crops, registration_date, credit_score) 
+VALUES (1, '123456789', 'John Doe', '0788123456', 'Kicukiro', 'Gikondo', 'Kigarama', 'Nyamirambo', 2.5, 'Tomato, Maize', TO_DATE('2023-01-15', 'YYYY-MM-DD'), 750);
+
+INSERT INTO FARMERS (farmer_id, national_id, names, phone, district, sector, cell, village, farm_size_hectares, primary_crops, registration_date, credit_score) 
+VALUES (2, '987654321', 'Jane Smith', '0788765432', 'Gasabo', 'Kimironko', 'Kimisagara', 'Remera', 1.8, 'Beans', TO_DATE('2023-03-20', 'YYYY-MM-DD'), 680);
+
+INSERT INTO FARMERS (
+    farmer_id, national_id, names, phone, district, sector, cell, village,
+    farm_size_hectares, primary_crops, registration_date, credit_score
+) VALUES (
+    3, 'NID003', 'Alice Johnson', '0788234567', 'Rwamagana', 'Sector C', 'Cell Z', 'Village 3',
+    1.8, 'Irish Potatoes', DATE '2023-03-10', 720
+);
+
+INSERT INTO FARMERS (
+    farmer_id, national_id, names, phone, district, sector, cell, village,
+    farm_size_hectares, primary_crops, registration_date, credit_score
+) VALUES (
+    4, 'NID004', 'Bob Brown', '0788345678', 'Kirehe', 'Sector D', 'Cell W', 'Village 4',
+    4.2, 'Cassava', DATE '2023-04-05', 690
+);
+
+INSERT INTO FARMERS (
+    farmer_id, national_id, names, phone, district, sector, cell, village,
+    farm_size_hectares, primary_crops, registration_date, credit_score
+) VALUES (
+    5, 'NID005', 'Clara White', '0788456789', 'Nyamagabe', 'Sector E', 'Cell V', 'Village 5',
+    2.0, 'Coffee', DATE '2023-05-18', 710
+);
+
+
+-- Insert sample data into CROPS
+INSERT INTO CROPS (crop_id, crop_name, category, avg_shelf_life_days, optimal_storage_temp, seasonal_pattern, min_price, max_price, current_market_price)
+VALUES (1, 'Tomato', 'Vegetable', 7, 10, 'Seasonal', 200, 400, 350);
+
+INSERT INTO CROPS (crop_id, crop_name, category, avg_shelf_life_days, optimal_storage_temp, seasonal_pattern, min_price, max_price, current_market_price)
+VALUES (2, 'Maize', 'Grain', 180, 15, 'Annual', 150, 300, 250);
+
+INSERT INTO CROPS (crop_id, crop_name, category, avg_shelf_life_days, optimal_storage_temp, seasonal_pattern, min_price, max_price, current_market_price)
+VALUES (3, 'Beans', 'Legume', 90, 12, 'Biannual', 300, 500, 450);
+
+INSERT INTO CROPS (
+    crop_id, crop_name, category, avg_shelf_life_days, optimal_storage_temp,
+    seasonal_pattern, min_price, max_price, current_market_price
+) VALUES (
+    4, 'Cassava', 'Root Crop', 30, 18, 'Rainy Season', 150, 300, 280
+);
+
+INSERT INTO CROPS (
+    crop_id, crop_name, category, avg_shelf_life_days, optimal_storage_temp,
+    seasonal_pattern, min_price, max_price, current_market_price
+) VALUES (
+    5, 'Coffee', 'Cash Crop', 180, 20, 'Harvest Season', 1000, 1500, 1200
+);
+
+
+
+-- Insert sample data into STORAGE_FACILITIES
+INSERT INTO STORAGE_FACILITIES (storage_id, location, capacity_kg, current_occupancy, temperature, humidity_level, facility_type, cost_per_day)
+VALUES (1, 'Kicukiro Warehouse', 10000, 5000, 12, 70, 'Cold Storage', 100);
+
+INSERT INTO STORAGE_FACILITIES (storage_id, location, capacity_kg, current_occupancy, temperature, humidity_level, facility_type, cost_per_day)
+VALUES (2, 'Gasabo Dry Storage', 8000, 2000, 20, 50, 'Dry Storage', 50);
+
+INSERT INTO STORAGE_FACILITIES (
+    storage_id, location, capacity_kg, current_occupancy, temperature,
+    humidity_level, facility_type, cost_per_day
+) VALUES (
+    3, 'Rwamagana Warehouse', 12000, 7000, 18, 65, 'Dry Storage', 4000
+);
+
+INSERT INTO STORAGE_FACILITIES (
+    storage_id, location, capacity_kg, current_occupancy, temperature,
+    humidity_level, facility_type, cost_per_day
+) VALUES (
+    4, 'Kirehe Depot', 5000, 1000, 20, 70, 'Dry Storage', 3500
+);
+
+INSERT INTO STORAGE_FACILITIES (
+    storage_id, location, capacity_kg, current_occupancy, temperature,
+    humidity_level, facility_type, cost_per_day
+) VALUES (
+    5, 'Nyamagabe Storage', 15000, 12000, 10, 50, 'Cold Storage', 6000
+);
+
+
+-- Insert sample data into HARVESTS
+INSERT INTO HARVESTS (harvest_id, farmer_id, crop_id, quantity_kg, quality_grade, harvest_date, expected_spoilage_date, storage_location, storage_id, status)
+VALUES (1, 1, 1, 1000, 'A', TO_DATE('2024-05-01', 'YYYY-MM-DD'), TO_DATE('2024-05-08', 'YYYY-MM-DD'), 'Kicukiro Warehouse', 1, 'Stored');
+
+INSERT INTO HARVESTS (harvest_id, farmer_id, crop_id, quantity_kg, quality_grade, harvest_date, expected_spoilage_date, storage_location, storage_id, status)
+VALUES (2, 1, 2, 1500, 'B', TO_DATE('2024-04-20', 'YYYY-MM-DD'), TO_DATE('2024-10-17', 'YYYY-MM-DD'), 'Gasabo Dry Storage', 2, 'Stored');
+
+INSERT INTO HARVESTS (harvest_id, farmer_id, crop_id, quantity_kg, quality_grade, harvest_date, expected_spoilage_date, storage_location, storage_id, status)
+VALUES (3, 2, 3, 800, 'A', TO_DATE('2024-04-25', 'YYYY-MM-DD'), TO_DATE('2024-07-24', 'YYYY-MM-DD'), 'Gasabo Dry Storage', 2, 'Stored');
+
+INSERT INTO HARVESTS (
+    harvest_id, farmer_id, crop_id, quantity_kg, quality_grade,
+    harvest_date, expected_spoilage_date, storage_location, storage_id, status
+) VALUES (
+    4, 4, 4, 800, 'C', DATE '2023-06-20', DATE '2023-07-20', 'Kirehe Depot', 4, 'Stored'
+);
+
+INSERT INTO HARVESTS (
+    harvest_id, farmer_id, crop_id, quantity_kg, quality_grade,
+    harvest_date, expected_spoilage_date, storage_location, storage_id, status
+) VALUES (
+    5, 5, 5, 500, 'B', DATE '2023-06-25', DATE '2023-12-25', 'Nyamagabe Storage', 5, 'Stored'
+);
+
+-- Insert sample data into MARKET_PRICES
+INSERT INTO MARKET_PRICES (price_id, crop_id, market_location, price_per_kg, date_recorded, demand_level, supply_level, price_trend)
+VALUES (1, 1, 'Kigali Central Market', 360, TO_DATE('2024-05-05', 'YYYY-MM-DD'), 'High', 'Medium', 'Rising');
+
+INSERT INTO MARKET_PRICES (price_id, crop_id, market_location, price_per_kg, date_recorded, demand_level, supply_level, price_trend)
+VALUES (2, 2, 'Nyabugogo Market', 240, TO_DATE('2024-05-05', 'YYYY-MM-DD'), 'Medium', 'High', 'Stable');
+
+INSERT INTO MARKET_PRICES (price_id, crop_id, market_location, price_per_kg, date_recorded, demand_level, supply_level, price_trend)
+VALUES (3, 3, 'Kimironko Market', 460, TO_DATE('2024-05-05', 'YYYY-MM-DD'), 'High', 'Low', 'Rising');
+INSERT INTO MARKET_PRICES (
+    price_id, crop_id, market_location, price_per_kg, date_recorded,
+    demand_level, supply_level, price_trend
+) VALUES (
+    4, 4, 'Kirehe Market', 290, DATE '2023-06-30', 'High', 'Low', 'Rising'
+);
+
+INSERT INTO MARKET_PRICES (
+    price_id, crop_id, market_location, price_per_kg, date_recorded,
+    demand_level, supply_level, price_trend
+) VALUES (
+    5, 5, 'Nyamagabe Market', 1250, DATE '2023-06-30', 'Medium', 'Medium', 'Stable'
+);
+
+
+-- Insert sample data into BUYERS
+INSERT INTO BUYERS (buyer_id, buyer_name, buyer_type, phone, location, preferred_crops, payment_reliability_score)
+VALUES (1, 'AgroMart Ltd.', 'Retailer', '0788123000', 'Kigali', 'Tomato, Beans', 800);
+
+INSERT INTO BUYERS (buyer_id, buyer_name, buyer_type, phone, location, preferred_crops, payment_reliability_score)
+VALUES (2, 'FreshFoods Export', 'Exporter', '0788767000', 'Kigali', 'Maize', 900);
+
+INSERT INTO BUYERS (
+    buyer_id, buyer_name, buyer_type, phone, location, preferred_crops, payment_reliability_score
+) VALUES (
+    3, 'Coffee Exporters', 'Exporter', '0788234987', 'Nyamagabe', 'Coffee', 900
+);
+
+INSERT INTO BUYERS (
+    buyer_id, buyer_name, buyer_type, phone, location, preferred_crops, payment_reliability_score
+) VALUES (
+    4, 'Local Market Vendor', 'Retailer', '0788345987', 'Rwamagana', 'Beans, Maize', 650
+);
+
+INSERT INTO BUYERS (
+    buyer_id, buyer_name, buyer_type, phone, location, preferred_crops, payment_reliability_score
+) VALUES (
+    5, 'Food Supplies Ltd', 'Wholesaler', '0788456987', 'Kirehe', 'Cassava, Irish Potatoes', 700
+);
+
+
+-- Insert sample data into TRANSACTIONS
+INSERT INTO TRANSACTIONS (transaction_id, harvest_id, buyer_id, quantity_kg, agreed_price, transaction_date, payment_status, delivery_status, quality_rating, farmer_rating, buyer_rating)
+VALUES (1, 1, 1, 500, 350, TO_DATE('2024-05-06', 'YYYY-MM-DD'), 'Paid', 'Delivered', 5, 4, 5);
+
+INSERT INTO TRANSACTIONS (transaction_id, harvest_id, buyer_id, quantity_kg, agreed_price, transaction_date, payment_status, delivery_status, quality_rating, farmer_rating, buyer_rating)
+VALUES (2, 3, 2, 800, 450, TO_DATE('2024-05-07', 'YYYY-MM-DD'), 'Pending', 'In Transit', 4, 5, 4);
+
+INSERT INTO TRANSACTIONS (
+    transaction_id, harvest_id, buyer_id, quantity_kg, agreed_price,
+    transaction_date, payment_status, delivery_status, quality_rating,
+    farmer_rating, buyer_rating
+) VALUES (
+    3, 3, 3, 800, 424000, DATE '2023-07-10', 'Paid', 'Delivered', 5, 5, 5
+);
+
+INSERT INTO TRANSACTIONS (
+    transaction_id, harvest_id, buyer_id, quantity_kg, agreed_price,
+    transaction_date, payment_status, delivery_status, quality_rating,
+    farmer_rating, buyer_rating
+) VALUES (
+    4, 4, 4, 600, 174000, DATE '2023-07-12', 'Paid', 'Delivered', 3, 3, 4
+);
+
+INSERT INTO TRANSACTIONS (
+    transaction_id, harvest_id, buyer_id, quantity_kg, agreed_price,
+    transaction_date, payment_status, delivery_status, quality_rating,
+    farmer_rating, buyer_rating
+) VALUES (
+    5, 5, 5, 400, 500000, DATE '2023-07-15', 'Pending', 'Pending', 4, 4, 3
+);
+
+
+INSERT INTO WEATHER_INFO (weather_id, district, weather_date, temperature, rainfall_mm, humidity, forecast_next_7days) 
+VALUES (1, 'Kicukiro', TO_DATE('2024-05-05', 'YYYY-MM-DD'), 25, 12, 65, 'Sunny with scattered showers');
+
+INSERT INTO WEATHER_INFO (weather_id, district, weather_date, temperature, rainfall_mm, humidity, forecast_next_7days) 
+VALUES (2, 'Gasabo', TO_DATE('2024-05-05', 'YYYY-MM-DD'), 24, 15, 70, 'Cloudy with moderate rain');
+
+INSERT INTO WEATHER_INFO (
+    weather_id, district, weather_date, temperature, rainfall_mm, humidity, forecast_next_7days
+) VALUES (
+    3, 'Rwamagana', DATE '2023-06-30', 28, 10, 65, 'Sunny with light showers day 4'
+);
+
+INSERT INTO WEATHER_INFO (
+    weather_id, district, weather_date, temperature, rainfall_mm, humidity, forecast_next_7days
+) VALUES (
+    4, 'Kirehe', DATE '2023-06-30', 30, 5, 60, 'Dry weather expected all week'
+);
+
+INSERT INTO WEATHER_INFO (
+    weather_id, district, weather_date, temperature, rainfall_mm, humidity, forecast_next_7days
+) VALUES (
+    5, 'Nyamagabe', DATE '2023-06-30', 22, 20, 75, 'Moderate rain expected day 1 and day 7'
+);
+
+COMMIT;
+
+CREATE OR REPLACE PACKAGE BODY price_analytics AS
+
+  FUNCTION get_moving_avg_price(p_crop_id IN NUMBER, p_days IN NUMBER) RETURN NUMBER IS
+    v_avg_price NUMBER;
+  BEGIN
+    SELECT AVG(price_per_kg)
+    INTO v_avg_price
+    FROM market_prices
+    WHERE crop_id = p_crop_id
+      AND date_recorded >= SYSDATE - p_days;
+
+    RETURN NVL(v_avg_price, 0);
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 0;
+  END get_moving_avg_price;
+
+  PROCEDURE update_market_prices(p_days IN NUMBER) IS
+    TYPE crop_price_rec IS RECORD (
+      crop_id CROPS.crop_id%TYPE,
+      moving_avg NUMBER,
+      demand_score NUMBER,
+      supply_score NUMBER,
+      seasonal_factor NUMBER,
+      new_price NUMBER
+    );
+
+    TYPE crop_price_tab IS TABLE OF crop_price_rec;
+    v_crop_prices crop_price_tab;
+
+    TYPE t_crop_ids IS TABLE OF NUMBER;
+    v_crop_ids t_crop_ids;
+
+    v_demand_weight CONSTANT NUMBER := 0.4;
+    v_supply_weight CONSTANT NUMBER := 0.3;
+    v_season_weight CONSTANT NUMBER := 0.3;
+
+    v_seasonal_factor NUMBER;
+
+  BEGIN
+    -- First just collect crop ids
+    SELECT crop_id BULK COLLECT INTO v_crop_ids FROM crops;
+
+    -- Extend main record collection to match size
+    v_crop_prices := crop_price_tab();
+    v_crop_prices.EXTEND(v_crop_ids.COUNT);
+
+    FOR i IN 1 .. v_crop_ids.COUNT LOOP
+      v_crop_prices(i).crop_id := v_crop_ids(i);
+
+      v_crop_prices(i).moving_avg := get_moving_avg_price(v_crop_prices(i).crop_id, p_days);
+
+      -- demand & supply scoring
+      SELECT NVL(AVG(CASE demand_level WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END),2),
+             NVL(AVG(CASE supply_level WHEN 'Low' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END),2)
+      INTO v_crop_prices(i).demand_score, v_crop_prices(i).supply_score
+      FROM market_prices
+      WHERE crop_id = v_crop_prices(i).crop_id
+        AND date_recorded >= SYSDATE - p_days;
+
+      -- seasonal factor
+      SELECT CASE
+               WHEN LOWER(seasonal_pattern) LIKE '%annual%' THEN 1
+               WHEN LOWER(seasonal_pattern) LIKE '%seasonal%' THEN
+                 CASE WHEN TO_CHAR(SYSDATE,'MM') IN ('11','12','01','02') THEN 1.2 ELSE 0.8 END
+               ELSE 1
+             END
+      INTO v_seasonal_factor
+      FROM crops
+      WHERE crop_id = v_crop_prices(i).crop_id;
+
+      v_crop_prices(i).seasonal_factor := v_seasonal_factor;
+
+      -- weighted new price
+      v_crop_prices(i).new_price :=
+        v_crop_prices(i).moving_avg *
+        (1 + v_demand_weight * (v_crop_prices(i).demand_score - 2)/2
+           - v_supply_weight * (v_crop_prices(i).supply_score - 2)/2)
+           * v_crop_prices(i).seasonal_factor;
+
+      -- clamp price
+      DECLARE
+        v_min NUMBER;
+        v_max NUMBER;
+      BEGIN
+        SELECT min_price, max_price INTO v_min, v_max
+        FROM crops
+        WHERE crop_id = v_crop_prices(i).crop_id;
+
+        IF v_crop_prices(i).new_price < v_min THEN
+          v_crop_prices(i).new_price := v_min;
+        ELSIF v_crop_prices(i).new_price > v_max THEN
+          v_crop_prices(i).new_price := v_max;
+        END IF;
+      END;
+    END LOOP;
+
+    -- Bulk update
+    FORALL i IN INDICES OF v_crop_prices
+      UPDATE crops
+      SET current_market_price = v_crop_prices(i).new_price
+      WHERE crop_id = v_crop_prices(i).crop_id;
+
+    COMMIT;
+  END update_market_prices;
+
+  PROCEDURE check_price_alerts IS
+    CURSOR c_farmers_targets IS
+      SELECT f.farmer_id, f.names, c.crop_id, c.crop_name, c.current_market_price, h.status
+      FROM farmers f
+      JOIN harvests h ON f.farmer_id = h.farmer_id
+      JOIN crops c ON h.crop_id = c.crop_id
+      WHERE h.status = 'Stored';
+
+    TYPE t_alerts IS TABLE OF c_farmers_targets%ROWTYPE;
+    v_alerts t_alerts;
+
+  BEGIN
+    OPEN c_farmers_targets;
+    FETCH c_farmers_targets BULK COLLECT INTO v_alerts;
+    CLOSE c_farmers_targets;
+
+    FOR i IN 1 .. v_alerts.COUNT LOOP
+      DECLARE
+        v_target NUMBER;
+      BEGIN
+        SELECT min_price INTO v_target FROM crops WHERE crop_id = v_alerts(i).crop_id;
+
+        IF v_alerts(i).current_market_price >= v_target THEN
+          DBMS_OUTPUT.PUT_LINE('Price Alert: '||v_alerts(i).names||' - '||
+                               v_alerts(i).crop_name||' now at '||
+                               v_alerts(i).current_market_price);
+        END IF;
+      END;
+    END LOOP;
+  END check_price_alerts;
+
+END price_analytics;
+/
+SET SERVEROUTPUT ON;
+BEGIN
+  price_analytics.update_market_prices(7); -- update prices based on last 7 days
+  price_analytics.check_price_alerts;      -- check and output price alerts
+END;
+/
+commit;
+
+
+
+
+CREATE OR REPLACE PACKAGE spoilage_monitor AS
+  PROCEDURE calculate_shelf_life;
+  PROCEDURE predict_spoilage_and_notify(p_threshold NUMBER := 70);
+  PROCEDURE reallocate_storage;
+END spoilage_monitor;
+/
+
+CREATE OR REPLACE PACKAGE BODY spoilage_monitor AS
+
+  -- 1. Real-time shelf life calculation
+  PROCEDURE calculate_shelf_life IS
+    v_shelf_life NUMBER;
+  BEGIN
+    FOR rec IN (
+      SELECT h.harvest_id,
+             h.quantity_kg,
+             h.storage_id,
+             h.harvest_date,
+             c.avg_shelf_life_days,
+             s.temperature,
+             s.humidity_level
+      FROM harvests h
+      JOIN crops c ON h.crop_id = c.crop_id
+      JOIN storage_facilities s ON h.storage_id = s.storage_id
+      WHERE h.status = 'Stored'
+    ) LOOP
+
+      -- Adjust shelf life based on storage conditions using simple decay model
+      v_shelf_life := rec.avg_shelf_life_days * 
+                      CASE 
+                        WHEN rec.temperature > 20 THEN 0.8
+                        WHEN rec.temperature BETWEEN 15 AND 20 THEN 0.9
+                        ELSE 1
+                      END *
+                      CASE 
+                        WHEN rec.humidity_level > 70 THEN 0.85
+                        ELSE 1
+                      END;
+
+      DBMS_OUTPUT.PUT_LINE(
+        'Harvest ID: ' || rec.harvest_id ||
+        ', Adjusted Shelf Life: ' || ROUND(v_shelf_life,2) || ' days'
+      );
+    END LOOP;
+  END calculate_shelf_life;
+
+  -- 2. Predict spoilage and send urgent notifications
+  PROCEDURE predict_spoilage_and_notify(p_threshold NUMBER := 70) IS
+    v_spoilage_rate NUMBER;
+  BEGIN
+    FOR rec IN (
+      SELECT h.harvest_id,
+             h.quantity_kg,
+             h.storage_id,
+             h.harvest_date,
+             c.avg_shelf_life_days,
+             s.temperature,
+             s.humidity_level,
+             f.names AS farmer_name
+      FROM harvests h
+      JOIN crops c ON h.crop_id = c.crop_id
+      JOIN storage_facilities s ON h.storage_id = s.storage_id
+      JOIN farmers f ON h.farmer_id = f.farmer_id
+      WHERE h.status = 'Stored'
+    ) LOOP
+
+      -- Adjusted shelf life
+      v_spoilage_rate := (TRUNC(SYSDATE - rec.harvest_date) /
+                          (rec.avg_shelf_life_days *
+                          CASE 
+                            WHEN rec.temperature > 20 THEN 0.8
+                            WHEN rec.temperature BETWEEN 15 AND 20 THEN 0.9
+                            ELSE 1
+                          END *
+                          CASE 
+                            WHEN rec.humidity_level > 70 THEN 0.85
+                            ELSE 1
+                          END)) * 100;
+
+      DBMS_OUTPUT.PUT_LINE(
+        'Harvest ID: ' || rec.harvest_id ||
+        ', Spoilage Rate: ' || ROUND(v_spoilage_rate,2) || '%'
+      );
+
+      -- Urgent sale notification
+      IF v_spoilage_rate >= p_threshold THEN
+        DBMS_OUTPUT.PUT_LINE(
+          '?? URGENT SALE ALERT! Farmer: ' || rec.farmer_name ||
+          ', Harvest ID: ' || rec.harvest_id ||
+          ', Spoilage risk: ' || ROUND(v_spoilage_rate,2) || '% exceeds threshold'
+        );
+      END IF;
+
+    END LOOP;
+  END predict_spoilage_and_notify;
+
+  -- 3. Suggest storage reallocation
+  PROCEDURE reallocate_storage IS
+  BEGIN
+    FOR rec IN (
+      SELECT h.harvest_id,
+             h.quantity_kg,
+             h.storage_id,
+             s.capacity_kg,
+             s.current_occupancy,
+             s.facility_type
+      FROM harvests h
+      JOIN storage_facilities s ON h.storage_id = s.storage_id
+      WHERE h.status = 'Stored'
+    ) LOOP
+      IF rec.current_occupancy / rec.capacity_kg > 0.8 THEN
+        DBMS_OUTPUT.PUT_LINE(
+          'Harvest ID: ' || rec.harvest_id ||
+          ' is in crowded storage (' || ROUND(rec.current_occupancy/rec.capacity_kg*100,2) || '% full). Consider reallocation to a facility with lower occupancy.'
+        );
+      END IF;
+    END LOOP;
+  END reallocate_storage;
+
+END spoilage_monitor;
+/
+
+SET SERVEROUTPUT ON;
+BEGIN
+  -- 1. Calculate shelf life
+  spoilage_monitor.calculate_shelf_life;
+
+  -- 2. Predict spoilage and notify if >= threshold (default 70%)
+  spoilage_monitor.predict_spoilage_and_notify;
+
+  -- 3. Check for crowded storage
+  spoilage_monitor.reallocate_storage;
+END;
+/
+
+
+
+
+
+
+CREATE OR REPLACE PACKAGE credit_engine IS
+
+  -- Record type for credit report summary
+  TYPE credit_report_rec IS RECORD (
+    farmer_id           FARMERS.farmer_id%TYPE,
+    farmer_name         FARMERS.names%TYPE,
+    total_transactions  NUMBER,
+    avg_quality_rating  NUMBER,
+    avg_payment_status_score NUMBER,
+    avg_buyer_rating    NUMBER,
+    credit_score        FARMERS.credit_score%TYPE,
+    loan_eligibility    VARCHAR2(40),  -- increased size
+    risk_category       VARCHAR2(40)   -- increased size
+  );
+
+  -- Cursor type for credit report
+  TYPE credit_report_cur IS REF CURSOR RETURN credit_report_rec;
+
+  -- Function to calculate credit score for a given farmer
+  FUNCTION calculate_credit_score(p_farmer_id IN NUMBER) RETURN NUMBER;
+
+  -- Procedure to update farmer credit score based on calculation
+  PROCEDURE update_farmer_credit_score(p_farmer_id IN NUMBER);
+
+  -- Function to assess loan eligibility and risk category based on credit score
+  FUNCTION assess_loan_eligibility(p_credit_score IN NUMBER) RETURN VARCHAR2;
+
+  -- Procedure to generate credit report cursor for all farmers
+  PROCEDURE generate_credit_report(p_report OUT credit_report_cur);
+
+END credit_engine;
+/
+
+
+CREATE OR REPLACE PACKAGE BODY credit_engine IS
+
+  -- Helper function to convert payment_status to numeric score
+  FUNCTION payment_status_score(p_status VARCHAR2) RETURN NUMBER IS
+  BEGIN
+    IF p_status = 'Paid' THEN
+      RETURN 1;
+    ELSIF p_status = 'Pending' THEN
+      RETURN 0.5;
+    ELSE
+      RETURN 0;
+    END IF;
+  END payment_status_score;
+
+  FUNCTION calculate_credit_score(p_farmer_id IN NUMBER) RETURN NUMBER IS
+    v_total_transactions NUMBER := 0;
+    v_avg_quality_rating NUMBER := 0;
+    v_avg_payment_score  NUMBER := 0;
+    v_avg_buyer_rating   NUMBER := 0;
+    v_credit_score       NUMBER := 0;
+  BEGIN
+    -- Aggregate transaction data for farmer
+    SELECT COUNT(t.transaction_id),
+           NVL(AVG(t.quality_rating),0),
+           NVL(AVG(CASE WHEN t.payment_status = 'Paid' THEN 1 WHEN t.payment_status = 'Pending' THEN 0.5 ELSE 0 END),0),
+           NVL(AVG(t.buyer_rating),0)
+      INTO v_total_transactions, v_avg_quality_rating, v_avg_payment_score, v_avg_buyer_rating
+      FROM TRANSACTIONS t
+      JOIN HARVESTS h ON t.harvest_id = h.harvest_id
+      WHERE h.farmer_id = p_farmer_id;
+
+    -- Weight parameters for credit score calculation
+    -- Weights: transactions 25%, quality_rating 25%, payment_score 30%, buyer_rating 20%
+    v_credit_score := 
+      LEAST(1000, -- cap max score
+        ROUND(
+          (v_total_transactions * 25) * 0.01 + 
+          (v_avg_quality_rating * 25) + 
+          (v_avg_payment_score * 30 * 100) + 
+          (v_avg_buyer_rating * 20)
+        )
+      );
+
+    RETURN v_credit_score;
+  END calculate_credit_score;
+
+  PROCEDURE update_farmer_credit_score(p_farmer_id IN NUMBER) IS
+    v_score NUMBER;
+  BEGIN
+    v_score := calculate_credit_score(p_farmer_id);
+    UPDATE FARMERS
+       SET credit_score = v_score
+     WHERE farmer_id = p_farmer_id;
+    COMMIT;
+  END update_farmer_credit_score;
+
+  FUNCTION assess_loan_eligibility(p_credit_score IN NUMBER) RETURN VARCHAR2 IS
+  BEGIN
+    IF p_credit_score >= 750 THEN
+      RETURN 'Eligible - Low Risk';
+    ELSIF p_credit_score >= 600 THEN
+      RETURN 'Eligible - Medium Risk';
+    ELSE
+      RETURN 'Not Eligible - High Risk';
+    END IF;
+  END assess_loan_eligibility;
+
+  PROCEDURE generate_credit_report(p_report OUT credit_report_cur) IS
+  BEGIN
+    OPEN p_report FOR
+      SELECT 
+        f.farmer_id,
+        f.names AS farmer_name,
+        NVL(t.tx_count,0) AS total_transactions,
+        NVL(t.avg_quality_rating,0) AS avg_quality_rating,
+        NVL(t.avg_payment_score,0) AS avg_payment_status_score,
+        NVL(t.avg_buyer_rating,0) AS avg_buyer_rating,
+        NVL(f.credit_score,0) AS credit_score,
+        CASE 
+          WHEN NVL(f.credit_score,0) >= 750 THEN 'Eligible - Low Risk'
+          WHEN NVL(f.credit_score,0) >= 600 THEN 'Eligible - Medium Risk'
+          ELSE 'Not Eligible - High Risk'
+        END AS loan_eligibility,
+        CASE 
+          WHEN NVL(f.credit_score,0) >= 750 THEN 'Low'
+          WHEN NVL(f.credit_score,0) >= 600 THEN 'Medium'
+          ELSE 'High'
+        END AS risk_category
+      FROM FARMERS f
+      LEFT JOIN (
+        SELECT 
+          h.farmer_id,
+          COUNT(t.transaction_id) AS tx_count,
+          AVG(t.quality_rating) AS avg_quality_rating,
+          AVG(CASE WHEN t.payment_status = 'Paid' THEN 1 WHEN t.payment_status = 'Pending' THEN 0.5 ELSE 0 END) AS avg_payment_score,
+          AVG(t.buyer_rating) AS avg_buyer_rating
+        FROM TRANSACTIONS t
+        JOIN HARVESTS h ON t.harvest_id = h.harvest_id
+        GROUP BY h.farmer_id
+      ) t ON f.farmer_id = t.farmer_id;
+  END generate_credit_report;
+
+END credit_engine;
+/
+
+
+
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+  -- Variables for direct credit score & eligibility checks
+  v_farmer_id    NUMBER := 10;
+  v_score        NUMBER;
+  v_eligibility  VARCHAR2(50);
+
+  -- Cursor variables for full credit report
+  v_report   credit_engine.credit_report_cur;
+  v_record   credit_engine.credit_report_rec;
+
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('==============================');
+  DBMS_OUTPUT.PUT_LINE(' STEP 1: UPDATE A SPECIFIC FARMER');
+  DBMS_OUTPUT.PUT_LINE('==============================');
+
+  -- Update the farmer's credit score
+  credit_engine.update_farmer_credit_score(v_farmer_id);
+
+  DBMS_OUTPUT.PUT_LINE('Updated credit score for farmer ID ' || v_farmer_id);
+
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10) || '==============================');
+  DBMS_OUTPUT.PUT_LINE(' STEP 2: CALCULATE CREDIT SCORE DIRECTLY');
+  DBMS_OUTPUT.PUT_LINE('==============================');
+
+  -- Get the calculated score directly
+  v_score := credit_engine.calculate_credit_score(v_farmer_id);
+
+  DBMS_OUTPUT.PUT_LINE('Calculated credit score for farmer ' || v_farmer_id || ': ' || v_score);
+
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10) || '==============================');
+  DBMS_OUTPUT.PUT_LINE(' STEP 3: ASSESS LOAN ELIGIBILITY');
+  DBMS_OUTPUT.PUT_LINE('==============================');
+
+  v_eligibility := credit_engine.assess_loan_eligibility(v_score);
+
+  DBMS_OUTPUT.PUT_LINE('Loan Eligibility for Farmer ' || v_farmer_id || ': ' || v_eligibility);
+
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10) || '==============================');
+  DBMS_OUTPUT.PUT_LINE(' STEP 4: UPDATE ALL FARMERS (BATCH)');
+  DBMS_OUTPUT.PUT_LINE('==============================');
+
+  -- Update all farmers in the system
+  FOR f IN (SELECT farmer_id FROM farmers)
+  LOOP
+    credit_engine.update_farmer_credit_score(f.farmer_id);
+  END LOOP;
+
+  DBMS_OUTPUT.PUT_LINE('All farmer credit scores updated successfully.');
+
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10) || '==============================');
+  DBMS_OUTPUT.PUT_LINE(' STEP 5: GENERATE FULL CREDIT REPORT');
+  DBMS_OUTPUT.PUT_LINE('==============================');
+
+  -- Open the cursor with the credit report
+  credit_engine.generate_credit_report(v_report);
+
+  -- Loop and print the full credit report
+  LOOP
+    FETCH v_report INTO v_record;
+    EXIT WHEN v_report%NOTFOUND;
+
+    DBMS_OUTPUT.PUT_LINE(
+      'Farmer ID: ' || v_record.farmer_id ||
+      ' | Name: ' || v_record.farmer_name ||
+      ' | Transactions: ' || v_record.total_transactions ||
+      ' | Avg Quality: ' || NVL(TO_CHAR(v_record.avg_quality_rating), '0') ||
+      ' | Avg Buyer Rating: ' || NVL(TO_CHAR(v_record.avg_buyer_rating), '0') ||
+      ' | Payment Score: ' || NVL(TO_CHAR(v_record.avg_payment_status_score), '0') ||
+      ' | Credit Score: ' || v_record.credit_score ||
+      ' | Eligibility: ' || v_record.loan_eligibility ||
+      ' | Risk: ' || v_record.risk_category
+    );
+  END LOOP;
+
+  CLOSE v_report;
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10) || 'CREDIT REPORT COMPLETED.');
+
+END;
+/
+
+
+CREATE OR REPLACE PACKAGE matching_engine IS
+
+  TYPE match_result_rec IS RECORD (
+    farmer_id    NUMBER,
+    buyer_id     NUMBER,
+    match_score  NUMBER,
+    distance_km  NUMBER,
+    price_diff   NUMBER
+  );
+
+  TYPE match_result_table IS TABLE OF match_result_rec;
+
+  TYPE match_array IS TABLE OF match_result_rec INDEX BY PLS_INTEGER;
+
+  -- Function to calculate geographic distance (mocked by district centroids)
+  FUNCTION calc_distance(p_farmer_district VARCHAR2, p_buyer_location VARCHAR2) RETURN NUMBER;
+
+  PROCEDURE bulk_process_matches;
+
+  FUNCTION pipelined_matches(p_buyer_id NUMBER) RETURN match_result_table PIPELINED;
+
+END matching_engine;
+/
+
+CREATE OR REPLACE PACKAGE BODY matching_engine IS
+
+  -- Mock district centroid coordinates (latitude, longitude)
+  -- In a real system, replace with actual geocoding or a reference table
+  TYPE district_coord IS RECORD (lat NUMBER, lon NUMBER);
+  TYPE district_coord_map IS TABLE OF district_coord INDEX BY VARCHAR2(50);
+
+  g_district_coords district_coord_map;
+
+  PROCEDURE init_district_coords IS
+  BEGIN
+    g_district_coords('Kicukiro') := district_coord(1, 1);
+    g_district_coords('Gasabo') := district_coord(2, 2);
+    g_district_coords('Rwamagana') := district_coord(3, 3);
+    g_district_coords('Kirehe') := district_coord(4, 4);
+    g_district_coords('Nyamagabe') := district_coord(5, 5);
+    -- Add more districts as needed
+  END;
+
+  FUNCTION calc_distance(p_farmer_district VARCHAR2, p_buyer_location VARCHAR2) RETURN NUMBER IS
+    pi NUMBER := ACOS(-1);
+    lat1 NUMBER;
+    lon1 NUMBER;
+    lat2 NUMBER;
+    lon2 NUMBER;
+    rad_lat1 NUMBER;
+    rad_lon1 NUMBER;
+    rad_lat2 NUMBER;
+    rad_lon2 NUMBER;
+    delta_lat NUMBER;
+    delta_lon NUMBER;
+    a NUMBER;
+    c NUMBER;
+    radius_km CONSTANT NUMBER := 6371;
+    dist NUMBER;
+  BEGIN
+    IF g_district_coords.EXISTS(p_farmer_district) THEN
+      lat1 := g_district_coords(p_farmer_district).lat;
+      lon1 := g_district_coords(p_farmer_district).lon;
+    ELSE
+      lat1 := 0; lon1 := 0; -- Default/fallback
+    END IF;
+
+    IF g_district_coords.EXISTS(p_buyer_location) THEN
+      lat2 := g_district_coords(p_buyer_location).lat;
+      lon2 := g_district_coords(p_buyer_location).lon;
+    ELSE
+      lat2 := 0; lon2 := 0;
+    END IF;
+
+    rad_lat1 := lat1 * (pi / 180);
+    rad_lon1 := lon1 * (pi / 180);
+    rad_lat2 := lat2 * (pi / 180);
+    rad_lon2 := lon2 * (pi / 180);
+
+    delta_lat := rad_lat2 - rad_lat1;
+    delta_lon := rad_lon2 - rad_lon1;
+
+    a := SIN(delta_lat/2)*SIN(delta_lat/2) + COS(rad_lat1)*COS(rad_lat2)*SIN(delta_lon/2)*SIN(delta_lon/2);
+    c := 2 * ATAN2(SQRT(a), SQRT(1 - a));
+    dist := radius_km * c;
+
+    RETURN dist;
+  END calc_distance;
+
+  PROCEDURE bulk_process_matches IS
+
+    CURSOR buyers_cur IS
+      SELECT buyer_id, preferred_crops, location, payment_reliability_score
+      FROM buyers;
+
+    CURSOR farmers_cur(p_crop VARCHAR2) IS
+      SELECT farmer_id, primary_crops, credit_score, district
+      FROM farmers
+      WHERE INSTR(primary_crops, p_crop) > 0;
+
+    TYPE match_array IS TABLE OF match_result_rec INDEX BY PLS_INTEGER;
+    v_matches match_array;
+    v_count PLS_INTEGER := 0;
+
+    v_buyer_id NUMBER;
+    v_buyer_crops VARCHAR2(4000);
+    v_buyer_location VARCHAR2(100);
+    v_buyer_payment_score NUMBER;
+
+  BEGIN
+    init_district_coords;
+
+    FOR buyer_rec IN buyers_cur LOOP
+      v_buyer_id := buyer_rec.buyer_id;
+      v_buyer_crops := buyer_rec.preferred_crops;
+      v_buyer_location := buyer_rec.location;
+      v_buyer_payment_score := buyer_rec.payment_reliability_score;
+
+      FOR crop_rec IN (
+        SELECT REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) AS crop_name
+        FROM dual
+        CONNECT BY REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) IS NOT NULL
+      ) LOOP
+        FOR farmer_rec IN farmers_cur(TRIM(crop_rec.crop_name)) LOOP
+
+          DECLARE
+            v_distance NUMBER;
+            v_price_diff NUMBER := 0;
+            v_match_score NUMBER;
+            v_historical_success NUMBER := 0;
+            v_avg_price_harvest NUMBER := 0;
+            v_avg_price_market NUMBER := 0;
+          BEGIN
+            -- Calculate distance by districts (mock)
+            v_distance := calc_distance(farmer_rec.district, v_buyer_location);
+
+            -- Average price from harvests for this crop and farmer
+            SELECT NVL(AVG(C.current_market_price), 0)
+              INTO v_avg_price_market
+              FROM crops C
+              WHERE C.crop_name = TRIM(crop_rec.crop_name);
+
+            -- For farmer harvest prices, join harvest and transactions
+            SELECT NVL(AVG(T.agreed_price), 0)
+              INTO v_avg_price_harvest
+              FROM harvests H
+              JOIN transactions T ON H.harvest_id = T.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_price_diff := ABS(v_avg_price_harvest - v_avg_price_market);
+
+            -- Historical success rate: % of transactions with quality_rating >= 4 for this farmer and buyers
+            SELECT NVL(COUNT(CASE WHEN T.quality_rating >= 4 THEN 1 END)/NULLIF(COUNT(*),0), 0)
+              INTO v_historical_success
+              FROM transactions T
+              JOIN harvests H ON T.harvest_id = H.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND T.buyer_id = v_buyer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            -- Match score components:
+            -- Credit score scaled (max 1000), closer distance better, price diff smaller better, historical success high better
+            v_match_score :=
+              (1000 - LEAST(farmer_rec.credit_score,1000)) * 0.1 + -- inverse credit score penalty
+              (100 - LEAST(v_distance, 100)) * 0.3 +
+              (100 - LEAST(v_price_diff * 10, 100)) * 0.3 +
+              (v_historical_success * 100) * 0.3;
+
+            v_count := v_count + 1;
+            v_matches(v_count) := match_result_rec(
+              farmer_id   => farmer_rec.farmer_id,
+              buyer_id    => v_buyer_id,
+              match_score => ROUND(v_match_score, 2),
+              distance_km => ROUND(v_distance, 2),
+              price_diff  => ROUND(v_price_diff, 2)
+            );
+          END;
+        END LOOP;
+      END LOOP;
+    END LOOP;
+
+    -- Bulk insert example (if needed, commented)
+    /*
+    FORALL i IN 1 .. v_count
+      INSERT INTO match_results_temp(farmer_id, buyer_id, match_score, distance_km, price_diff)
+      VALUES (v_matches(i).farmer_id, v_matches(i).buyer_id, v_matches(i).match_score, v_matches(i).distance_km, v_matches(i).price_diff);
+    */
+  END bulk_process_matches;
+
+  FUNCTION pipelined_matches(p_buyer_id NUMBER) RETURN match_result_table PIPELINED IS
+
+    CURSOR buyer_cur IS
+      SELECT buyer_id, preferred_crops, location, payment_reliability_score
+      FROM buyers
+      WHERE buyer_id = p_buyer_id;
+
+    CURSOR farmers_cur(p_crop VARCHAR2) IS
+      SELECT farmer_id, primary_crops, credit_score, district
+      FROM farmers
+      WHERE INSTR(primary_crops, p_crop) > 0;
+
+    v_buyer_id NUMBER;
+    v_buyer_crops VARCHAR2(4000);
+    v_buyer_location VARCHAR2(100);
+    v_buyer_payment_score NUMBER;
+
+  BEGIN
+    init_district_coords;
+
+    FOR buyer_rec IN buyer_cur LOOP
+      v_buyer_id := buyer_rec.buyer_id;
+      v_buyer_crops := buyer_rec.preferred_crops;
+      v_buyer_location := buyer_rec.location;
+      v_buyer_payment_score := buyer_rec.payment_reliability_score;
+
+      FOR crop_rec IN (
+        SELECT REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) AS crop_name
+        FROM dual
+        CONNECT BY REGEXP_SUBSTR(v_buyer_crops, '[^,]+', 1, LEVEL) IS NOT NULL
+      ) LOOP
+        FOR farmer_rec IN farmers_cur(TRIM(crop_rec.crop_name)) LOOP
+
+          DECLARE
+            v_distance NUMBER;
+            v_price_diff NUMBER := 0;
+            v_match_score NUMBER;
+            v_historical_success NUMBER := 0;
+            v_avg_price_harvest NUMBER := 0;
+            v_avg_price_market NUMBER := 0;
+          BEGIN
+            v_distance := calc_distance(farmer_rec.district, v_buyer_location);
+
+            SELECT NVL(AVG(C.current_market_price), 0)
+              INTO v_avg_price_market
+              FROM crops C
+              WHERE C.crop_name = TRIM(crop_rec.crop_name);
+
+            SELECT NVL(AVG(T.agreed_price), 0)
+              INTO v_avg_price_harvest
+              FROM harvests H
+              JOIN transactions T ON H.harvest_id = T.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_price_diff := ABS(v_avg_price_harvest - v_avg_price_market);
+
+            SELECT NVL(COUNT(CASE WHEN T.quality_rating >= 4 THEN 1 END)/NULLIF(COUNT(*),0), 0)
+              INTO v_historical_success
+              FROM transactions T
+              JOIN harvests H ON T.harvest_id = H.harvest_id
+              JOIN crops C ON H.crop_id = C.crop_id
+              WHERE H.farmer_id = farmer_rec.farmer_id
+                AND T.buyer_id = v_buyer_id
+                AND C.crop_name = TRIM(crop_rec.crop_name);
+
+            v_match_score :=
+              (1000 - LEAST(farmer_rec.credit_score,1000)) * 0.1 +
+              (100 - LEAST(v_distance, 100)) * 0.3 +
+              (100 - LEAST(v_price_diff * 10, 100)) * 0.3 +
+              (v_historical_success * 100) * 0.3;
+
+            PIPE ROW(match_result_rec(
+              farmer_id   => farmer_rec.farmer_id,
+              buyer_id    => v_buyer_id,
+              match_score => ROUND(v_match_score, 2),
+              distance_km => ROUND(v_distance, 2),
+              price_diff  => ROUND(v_price_diff, 2)
+            ));
+          END;
+        END LOOP;
+      END LOOP;
+    END LOOP;
+
+    RETURN;
+  END pipelined_matches;
+
+END matching_engine;
+/
+
+
+SET SERVEROUTPUT ON
+
+DECLARE
+  TYPE match_table_type IS TABLE OF matching_engine.match_result_rec;
+  matches match_table_type;
+BEGIN
+  -- Test pipelined_matches function for buyer_id = 1
+  SELECT * BULK COLLECT INTO matches
+  FROM TABLE(matching_engine.pipelined_matches(1));
+
+  IF matches.COUNT = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('No matches found for buyer_id 1.');
+  ELSE
+    FOR i IN 1 .. matches.COUNT LOOP
+      DBMS_OUTPUT.PUT_LINE('Farmer ID: ' || matches(i).farmer_id ||
+                           ', Buyer ID: ' || matches(i).buyer_id ||
+                           ', Score: ' || matches(i).match_score ||
+                           ', Distance (km): ' || matches(i).distance_km ||
+                           ', Price Diff: ' || matches(i).price_diff);
+    END LOOP;
+  END IF;
+END;
+/
+
+
+
+CREATE OR REPLACE PACKAGE report_generator IS
+
+  TYPE ref_cursor IS REF CURSOR;
+
+  PROCEDURE generate_price_forecast(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+  PROCEDURE generate_demand_prediction(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+  PROCEDURE generate_complex_report(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  );
+
+END report_generator;
+/
+
+CREATE OR REPLACE PACKAGE BODY report_generator IS
+
+  -- 1. Price Forecast
+  PROCEDURE generate_price_forecast(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+  BEGIN
+    OPEN p_result FOR
+      WITH price_data AS (
+        SELECT
+          mp.date_recorded,
+          mp.price_per_kg,
+          AVG(mp.price_per_kg) OVER (ORDER BY mp.date_recorded ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS moving_avg_30d
+        FROM
+          market_prices mp
+          JOIN crops c ON mp.crop_id = c.crop_id
+        WHERE
+          c.crop_name = p_crop_name
+          AND mp.date_recorded BETWEEN p_start_date AND p_end_date
+      ),
+      forecast AS (
+        SELECT
+          date_recorded,
+          moving_avg_30d,
+          LEAD(moving_avg_30d) OVER (ORDER BY date_recorded) AS next_day_forecast
+        FROM
+          price_data
+      )
+      SELECT
+        date_recorded,
+        moving_avg_30d,
+        next_day_forecast
+      FROM
+        forecast
+      ORDER BY
+        date_recorded;
+  END generate_price_forecast;
+
+  -- 2. Demand Prediction
+  PROCEDURE generate_demand_prediction(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+  BEGIN
+    OPEN p_result FOR
+      WITH demand_weather AS (
+        SELECT
+          t.transaction_date,
+          c.crop_name,
+          SUM(t.quantity_kg) AS total_quantity,
+          wi.temperature,
+          wi.rainfall_mm
+        FROM
+          transactions t
+          JOIN harvests h ON t.harvest_id = h.harvest_id
+          JOIN crops c ON h.crop_id = c.crop_id
+          JOIN weather_info wi ON wi.district = (
+            SELECT district FROM farmers f WHERE f.farmer_id = h.farmer_id
+          ) AND wi.weather_date = TRUNC(t.transaction_date)
+        WHERE
+          c.crop_name = p_crop_name
+          AND t.transaction_date BETWEEN p_start_date AND p_end_date
+        GROUP BY
+          t.transaction_date, c.crop_name, wi.temperature, wi.rainfall_mm
+      )
+      SELECT
+        transaction_date,
+        crop_name,
+        total_quantity,
+        temperature,
+        rainfall_mm,
+        CASE
+          WHEN temperature > 30 AND rainfall_mm < 20 THEN total_quantity * 0.9
+          WHEN temperature < 15 AND rainfall_mm > 50 THEN total_quantity * 1.1
+          ELSE total_quantity
+        END AS adjusted_demand_prediction
+      FROM
+        demand_weather
+      ORDER BY
+        transaction_date;
+  END generate_demand_prediction;
+
+  -- 3. Complex Report
+  PROCEDURE generate_complex_report(
+    p_crop_name IN VARCHAR2,
+    p_start_date IN DATE,
+    p_end_date IN DATE,
+    p_result OUT ref_cursor
+  ) IS
+    v_sql VARCHAR2(4000);
+  BEGIN
+    v_sql := q'[
+      WITH sales_cte AS (
+        SELECT
+          t.transaction_date,
+          c.crop_name,
+          SUM(t.quantity_kg) AS total_quantity,
+          AVG(t.agreed_price) AS avg_price,
+          RANK() OVER (PARTITION BY c.crop_name ORDER BY SUM(t.quantity_kg) DESC) AS sales_rank
+        FROM
+          transactions t
+          JOIN harvests h ON t.harvest_id = h.harvest_id
+          JOIN crops c ON h.crop_id = c.crop_id
+        WHERE
+          c.crop_name = :crop_name
+          AND t.transaction_date BETWEEN :start_date AND :end_date
+        GROUP BY
+          t.transaction_date, c.crop_name
+      ),
+      price_trends AS (
+        SELECT
+          transaction_date,
+          avg_price,
+          LAG(avg_price) OVER (ORDER BY transaction_date) AS prev_avg_price,
+          AVG(avg_price) OVER (ORDER BY transaction_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS moving_avg_7d
+        FROM sales_cte
+      )
+      SELECT
+        s.transaction_date,
+        s.total_quantity,
+        s.avg_price,
+        p.prev_avg_price,
+        p.moving_avg_7d,
+        s.sales_rank
+      FROM
+        sales_cte s
+        JOIN price_trends p ON s.transaction_date = p.transaction_date
+      ORDER BY
+        s.transaction_date
+    ]';
+
+    OPEN p_result FOR v_sql USING p_crop_name, p_start_date, p_end_date;
+  END generate_complex_report;
+
+END report_generator;
+/
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+  rc SYS_REFCURSOR;
+
+  -- For generate_price_forecast
+  v_date_recorded DATE;
+  v_moving_avg_30d NUMBER;
+  v_next_day_forecast NUMBER;
+
+  -- For generate_demand_prediction
+  v_transaction_date DATE;
+  v_crop_name VARCHAR2(100);
+  v_total_quantity NUMBER;
+  v_temperature NUMBER;
+  v_rainfall_mm NUMBER;
+  v_adjusted_demand_prediction NUMBER;
+
+  -- For generate_complex_report
+  v_report_date DATE;
+  v_total_quantity_report NUMBER;
+  v_avg_price NUMBER;
+  v_prev_avg_price NUMBER;
+  v_moving_avg_7d NUMBER;
+  v_sales_rank NUMBER;
+
+BEGIN
+  -- Test generate_price_forecast
+  DBMS_OUTPUT.PUT_LINE('--- Price Forecast ---');
+  report_generator.generate_price_forecast(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_date_recorded, v_moving_avg_30d, v_next_day_forecast;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_date_recorded, 'YYYY-MM-DD') ||
+      ', 30d Moving Avg: ' || NVL(TO_CHAR(v_moving_avg_30d, '999999.99'), 'NULL') ||
+      ', Next Day Forecast: ' || NVL(TO_CHAR(v_next_day_forecast, '999999.99'), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+  -- Test generate_demand_prediction
+  DBMS_OUTPUT.PUT_LINE('--- Demand Prediction ---');
+  report_generator.generate_demand_prediction(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_transaction_date, v_crop_name, v_total_quantity, v_temperature, v_rainfall_mm, v_adjusted_demand_prediction;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_transaction_date, 'YYYY-MM-DD') ||
+      ', Crop: ' || v_crop_name ||
+      ', Total Qty: ' || NVL(TO_CHAR(v_total_quantity), 'NULL') ||
+      ', Temp: ' || NVL(TO_CHAR(v_temperature), 'NULL') ||
+      ', Rainfall: ' || NVL(TO_CHAR(v_rainfall_mm), 'NULL') ||
+      ', Adjusted Demand: ' || NVL(TO_CHAR(v_adjusted_demand_prediction, '999999.99'), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+  -- Test generate_complex_report
+  DBMS_OUTPUT.PUT_LINE('--- Complex Report ---');
+  report_generator.generate_complex_report(
+    p_crop_name => 'Maize',
+    p_start_date => DATE '2023-01-01',
+    p_end_date   => DATE '2023-03-31',
+    p_result     => rc
+  );
+
+  LOOP
+    FETCH rc INTO v_report_date, v_total_quantity_report, v_avg_price, v_prev_avg_price, v_moving_avg_7d, v_sales_rank;
+    EXIT WHEN rc%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+      'Date: ' || TO_CHAR(v_report_date, 'YYYY-MM-DD') ||
+      ', Total Qty: ' || NVL(TO_CHAR(v_total_quantity_report), 'NULL') ||
+      ', Avg Price: ' || NVL(TO_CHAR(v_avg_price, '999999.99'), 'NULL') ||
+      ', Prev Avg Price: ' || NVL(TO_CHAR(v_prev_avg_price, '999999.99'), 'NULL') ||
+      ', 7d Moving Avg: ' || NVL(TO_CHAR(v_moving_avg_7d, '999999.99'), 'NULL') ||
+      ', Sales Rank: ' || NVL(TO_CHAR(v_sales_rank), 'NULL')
+    );
+  END LOOP;
+  CLOSE rc;
+
+END;
+/
+
+commit;
+
+
+
+
+
+
+
+
+
+
+
+
+-- 1. Audit Log Table: create only if not exists
+DECLARE
+    e_table_missing EXCEPTION;
+    PRAGMA EXCEPTION_INIT(e_table_missing, -942);
+BEGIN
+    EXECUTE IMMEDIATE '
+        CREATE TABLE audit_log (
+            audit_id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+            event_time TIMESTAMP DEFAULT SYSTIMESTAMP,
+            username VARCHAR2(30),
+            operation VARCHAR2(10),
+            table_name VARCHAR2(30),
+            record_id VARCHAR2(100),
+            success_flag CHAR(1),
+            error_message VARCHAR2(4000)
+        )
+    ';
+EXCEPTION
+    WHEN e_table_missing THEN
+        NULL; -- Table already exists, do nothing
+    WHEN OTHERS THEN
+        IF SQLCODE = -955 THEN
+            NULL; -- Table already exists
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- 2. Audit Logging Procedure
+CREATE OR REPLACE PROCEDURE audit_log_record (
+    p_operation    IN VARCHAR2,
+    p_table_name   IN VARCHAR2,
+    p_record_id    IN VARCHAR2,
+    p_success_flag IN CHAR,
+    p_error_msg    IN VARCHAR2 DEFAULT NULL
+) AS
+BEGIN
+    INSERT INTO audit_log (
+        username, operation, table_name, record_id, success_flag, error_message
+    ) VALUES (
+        SYS_CONTEXT('USERENV', 'SESSION_USER'),
+        p_operation,
+        p_table_name,
+        p_record_id,
+        p_success_flag,
+        p_error_msg
+    );
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL; -- Avoid audit failure impacting main transaction
+END audit_log_record;
+/
+
+-- 3. Function to check if current date is weekend or holiday (fixed no subquery)
+CREATE OR REPLACE FUNCTION is_holiday_or_weekday RETURN VARCHAR2 IS
+    v_day_of_week VARCHAR2(10);
+    v_today DATE := TRUNC(SYSDATE);
+
+    TYPE t_holidays IS TABLE OF DATE;
+    v_holidays t_holidays := t_holidays(
+      TO_DATE('25-12-2025','DD-MM-YYYY'), -- Christmas
+      TO_DATE('01-01-2025','DD-MM-YYYY')  -- New Year
+    );
+
+    v_is_holiday BOOLEAN := FALSE;
+BEGIN
+    v_day_of_week := TO_CHAR(v_today, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH');
+
+    FOR i IN v_holidays.FIRST .. v_holidays.LAST LOOP
+        IF v_today = v_holidays(i) THEN
+            v_is_holiday := TRUE;
+            EXIT;
+        END IF;
+    END LOOP;
+
+    IF v_is_holiday THEN
+        RETURN 'HOLIDAY';
+    ELSIF v_day_of_week IN ('SAT', 'SUN') THEN
+        RETURN 'WEEKEND';
+    ELSE
+        RETURN 'WEEKDAY';
+    END IF;
+END is_holiday_or_weekday;
+/
+
+-- 4. Compound trigger on FARMERS table to enforce insert restrictions and audit all attempts
+CREATE OR REPLACE TRIGGER trg_farmers_insert_audit
+FOR INSERT ON FARMERS
+COMPOUND TRIGGER
+
+  TYPE t_restrict_arr IS TABLE OF VARCHAR2(10);
+  TYPE t_errmsg_arr IS TABLE OF VARCHAR2(4000);
+  TYPE t_recordid_arr IS TABLE OF VARCHAR2(100);
+
+  g_restriction t_restrict_arr := t_restrict_arr();
+  g_errmsgs t_errmsg_arr := t_errmsg_arr();
+  g_record_ids t_recordid_arr := t_recordid_arr();
+
+  BEFORE EACH ROW IS
+    v_check VARCHAR2(10);
+  BEGIN
+    v_check := is_holiday_or_weekday();
+
+    IF v_check = 'WEEKDAY' THEN
+      -- Deny insert on weekday
+      g_restriction.EXTEND;
+      g_restriction(g_restriction.COUNT) := 'DENIED';
+      g_errmsgs.EXTEND;
+      g_errmsgs(g_errmsgs.COUNT) := 'Insert denied on weekday';
+      g_record_ids.EXTEND;
+      g_record_ids(g_record_ids.COUNT) := TO_CHAR(:NEW.farmer_id);
+      RAISE_APPLICATION_ERROR(-20001, 'Insert on FARMERS table is denied on weekdays.');
+    ELSIF v_check = 'HOLIDAY' THEN
+      -- Deny insert on holiday
+      g_restriction.EXTEND;
+      g_restriction(g_restriction.COUNT) := 'DENIED';
+      g_errmsgs.EXTEND;
+      g_errmsgs(g_errmsgs.COUNT) := 'Insert denied on holiday';
+      g_record_ids.EXTEND;
+      g_record_ids(g_record_ids.COUNT) := TO_CHAR(:NEW.farmer_id);
+      RAISE_APPLICATION_ERROR(-20002, 'Insert on FARMERS table is denied on holidays.');
+    ELSE
+      -- Allowed on weekend
+      g_restriction.EXTEND;
+      g_restriction(g_restriction.COUNT) := 'ALLOWED';
+      g_errmsgs.EXTEND;
+      g_errmsgs(g_errmsgs.COUNT) := NULL;
+      g_record_ids.EXTEND;
+      g_record_ids(g_record_ids.COUNT) := TO_CHAR(:NEW.farmer_id);
+    END IF;
+  END BEFORE EACH ROW;
+
+  AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1 .. g_restriction.COUNT LOOP
+      IF g_restriction(i) = 'ALLOWED' THEN
+        audit_log_record(
+          p_operation    => 'INSERT',
+          p_table_name   => 'FARMERS',
+          p_record_id    => g_record_ids(i),
+          p_success_flag => 'Y'
+        );
+      ELSE
+        audit_log_record(
+          p_operation    => 'INSERT',
+          p_table_name   => 'FARMERS',
+          p_record_id    => g_record_ids(i),
+          p_success_flag => 'N',
+          p_error_msg    => g_errmsgs(i)
+        );
+      END IF;
+    END LOOP;
+  END AFTER STATEMENT;
+
+END trg_farmers_insert_audit;
+/
+
+-- 5. Simple Trigger Example: Audit UPDATE on FARMERS table
+CREATE OR REPLACE TRIGGER trg_farmers_update_audit
+AFTER UPDATE ON FARMERS
+FOR EACH ROW
+BEGIN
+  audit_log_record(
+    p_operation    => 'UPDATE',
+    p_table_name   => 'FARMERS',
+    p_record_id    => TO_CHAR(:NEW.farmer_id),
+    p_success_flag => 'Y'
+  );
+END;
+/
+
+-- 6. Simple Trigger Example: Audit DELETE on FARMERS table
+CREATE OR REPLACE TRIGGER trg_farmers_delete_audit
+AFTER DELETE ON FARMERS
+FOR EACH ROW
+BEGIN
+  audit_log_record(
+    p_operation    => 'DELETE',
+    p_table_name   => 'FARMERS',
+    p_record_id    => TO_CHAR(:OLD.farmer_id),
+    p_success_flag => 'Y'
+  );
+END;
+/
+
+
+
+
+
+
+
+
+
+
+
