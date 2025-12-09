@@ -4,8 +4,8 @@ This is an Agricultural Management System that connects farmers with markets, tr
 
 *Pluggable database created*
 
+<img width="959" height="500" alt="pdb update" src="https://github.com/user-attachments/assets/9c11466e-3d2f-4ff4-b80f-fac80854bb10" />
 
-<img width="959" height="492" alt="Screenshot 2025-12-08 204141" src="https://github.com/user-attachments/assets/8cf1a309-d785-4679-adb5-52696893bc7f" />
 
 
 
