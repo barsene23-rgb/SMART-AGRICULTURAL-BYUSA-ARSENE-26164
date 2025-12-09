@@ -64,3 +64,5 @@ Use REPORT_GENERATOR to view price trends, storage usage, spoilage predictions, 
 
 https://github.com/barsene23-rgb/SMART-AGRICULTURAL-BYUSA-ARSENE-26164/blob/main/code_documentation
 https://github.com/barsene23-rgb/SMART-AGRICULTURAL-BYUSA-ARSENE-26164/blob/main/screenshots.md
+
+https://github.com/barsene23-rgb/SMART-AGRICULTURAL-BYUSA-ARSENE-26164/blob/main/Smart_Agri.sql
